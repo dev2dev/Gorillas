@@ -1,0 +1,117 @@
+#! /usr/bin/env bash
+source bashlib
+
+currencyNames=()
+currencyCodes=()
+currencyUnits=()
+currencyRoyalties=()
+fromEurs=()
+toEurs=()
+appIds=()
+
+royalties=
+upgrades=
+sales=
+
+emit "Reading reports" --
+    data=$(grep -hv '^Provider' */*.txt)
+    while IFS=$'\t' read _ _ appId _; do
+        for appIdExist in "${appIds[@]}"; do
+            [[ $appId = $appIdExist ]] && {
+                appId=
+                break
+            }
+        done
+
+        [[ $appId ]] && appIds+=("$appId") || true
+    done <<< "$data"
+emit -$? || exit
+
+(( ${#appIds[@]} )) || {
+    emit -r "No applications found."
+    exit 1
+}
+
+emit "Found App IDs:"
+for i in ${!appIds[@]}; do
+    emit "$i."$'\t'"${appIds[i]}"
+done
+until i=$(ask +0 "Which application would you like to generate a report for?") && [[ $i && $i != *[^0-9]* && ${appIds[i]} ]]; do
+    emit -y "Please enter a valid number."
+done
+appIdFilter=${appIds[i]}
+
+emit "Reading currencies" --
+    while IFS=, read currencyName currencyCode toEur fromEur; do
+        currencyNames+=("$currencyName")
+        currencyCodes+=("$currencyCode")
+        fromEurs+=("$fromEur")
+        toEurs+=("$toEur")
+    done < "${0%/*}/currencies"
+emit -$? || exit
+
+read entries _ < <(wc -l <<< "$data")
+entry=
+
+emit "Parsing reports"
+    while IFS=$'\t' read provider providerCountry appId upc isrc author title label type units royalty begin end currency country royaltyCurrency preorder seasonpass isan appleid price cma asset; do
+
+        # Progress indicator.
+        (( ++entry ))
+        printf "\r\t- %d / %d (%d%%)" "$entry" "$entries" "$((entry * 100 / entries))"
+
+        # Reset last* counters each day.
+        if [[ $lastdate != $end ]]; then
+            lastsales=
+            lastfreesales=
+            lastupgrades=
+            lastfreeupgrades=
+            lastroyalties=
+            lastdate=$end
+        fi
+
+        # Ignore non-Gorillas sales.
+        [[ $appId = $appIdFilter ]] || continue
+
+        # Record sale units and type.
+        case $type in
+            1)  (( lastsales        += units, sales         += units ))
+                [[ $royalty = 0 ]] && \
+                (( lastfreesales    += units, freesales     += units )) ;;
+
+            7)  (( lastupgrades     += units, upgrades      += units ))
+                [[ $royalty = 0 ]] && \
+                (( lastfreeupgrades += units, freeupgrades  += units )) ;;
+        esac
+
+        # The rest is just for paid sales.
+        [[ $royalty = 0 ]] && continue
+
+        # Find the EUR value for our sale currency.
+        toEur=0
+        for i in ${!currencyCodes[@]}; do
+            [[ ${currencyCodes[i]} = $royaltyCurrency ]] && {
+                toEur=${toEurs[i]}
+                currencyRoyalties[i]=$royalty
+                (( currencyUnits[i] += units ))
+                break
+            }
+        done
+        [[ $toEur = 0 ]] && emit -y "Couldn't find EUR conversion for: $royaltyCurrency"
+
+        # Record received royalties.
+        lastroyalties=$(bc <<< "${lastroyalties:-0} + ($royalty * $units * $toEur)")
+        royalties=$(bc <<< "${royalties:-0} + ($royalty * $units * $toEur)")
+
+    done <<< "$data"
+
+echo; echo
+emit -n "$(printf "Upgrades: %6d | Delta: %6d${lastfreeupgrades:+\t(Free: %d, Payed: %d)}" "$upgrades" "$lastupgrades" ${lastfreeupgrades:+"$lastfreeupgrades" "$((lastupgrades - lastfreeupgrades))"})"$'\n'
+emit -n "$(printf "Sales:    %6d | Delta: %6d${lastfreesales:+\t(Free: %d, Payed: %d)}" "$sales" "$lastsales" ${lastfreesales:+"$lastfreesales" "$((lastsales - lastfreesales))"})"$'\n'
+emit -n "$(printf "Profit:   %6.2f | Delta: %6.2f\t(EUR)" "$royalties" "$lastroyalties")"$'\n'
+echo
+for i in ${!currencyCodes[@]}; do
+    (( ${currencyUnits[i]} )) || continue
+
+    emit -n "$(printf "%s:      %6d ~ %5.2f: %6.2f\t(EUR, from %s)" "${currencyCodes[i]}" "${currencyUnits[i]}" "$(bc <<< "${currencyRoyalties[i]} * ${toEurs[i]}")" "$(bc <<< "${currencyRoyalties[i]} * ${currencyUnits[i]} * ${toEurs[i]}")" "${currencyNames[i]}")"$'\n'
+done
