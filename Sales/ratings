@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+source bashlib
+
+appIds=(        "com.lyndir.lhunath.Gorillas"                           )
+appStoreIds=(   302275459                                               )
+(( ${#appIds[@]} == ${#appStoreIds[@]} )) || {
+    emit -r "App ID and App Store ID count don't match"
+    exit 1
+}
+
+countryNames=(  "United States" "Argentina" "Australia" "Belgium"
+                "Brazil" "Canada" "Chile" "China" "Colombia"
+                "Costa Rica" "Croatia" "Czech Republic" "Denmark"
+                "Deutschland" "El Salvador" "Espana" "Finland" "France"
+                "Greece" "Guatemala" "Hong Kong" "Hungary" "India"
+                "Indonesia" "Ireland" "Israel" "Italia" "Korea" "Kuwait"
+                "Lebanon" "Luxembourg" "Malaysia" "Mexico" "Nederland"
+                "New Zealand" "Norway" "Osterreich" "Pakistan" "Panama"
+                "Peru" "Phillipines" "Poland" "Portugal" "Qatar"
+                "Romania" "Russia" "Saudi Arabia" "Schweitz/Suisse"
+                "Singapore" "Slovakia" "Slovenia" "South Africa"
+                "Sri Lanka" "Sweden" "Taiwan" "Thailand" "Turkey"
+                "United Arab Emirates" "United Kingdom" "Venezuela"
+                "Vietnam" "Japan"                                       )
+countryIds=(    143441 143505 143460 143446 143503 143455 143483 143465
+                143501 143495 143494 143489 143458 143443 143506 143454
+                143447 143442 143448 143504 143463 143482 143467 143476
+                143449 143491 143450 143466 143493 143497 143451 143473
+                143468 143452 143461 143457 143445 143477 143485 143507
+                143474 143478 143453 143498 143487 143469 143479 143459
+                143464 143496 143499 143472 143486 143456 143470 143475
+                143480 143481 143444 143502 143471 143462 )
+(( ${#countryNames[@]} == ${#countryIds[@]} )) || {
+    emit -r "Country name and id count don't match"
+    exit 1
+}
+
+reviewsForAppId() {
+    for a in "${!appIds[@]}"; do
+        [[ ${appIds[a]} == $appId ]] || continue
+
+        appStoreId=${appStoreIds[a]}
+        reviewsForAppStoreId
+        return
+    done
+
+    emit -r "App ID '$appId' is not known."
+    return 1
+}
+
+reviewsForAppStoreId() {
+    if [[ $countryId ]]; then
+        reviewsForCountryId
+    else
+        for countryId in "${countryIds[@]}"
+        do reviewsForCountryId; done
+    fi
+}
+
+reviewsForCountryId() {
+    for c in "${!countryIds[@]}"; do
+        (( ${countryIds[c]} == $countryId )) || continue
+
+        countryName=${countryNames[c]}
+        emit "$countryName" --
+            appInfo=$(curl -s -A "iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2" -H "X-Apple-Store-Front: $countryId-1" \
+                        "http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=$appStoreId&pageNumber=0&sortOrdering=2&type=Purple+Software" \
+                        | xmllint --format -)
+        emit -$? || continue
+
+        {
+            read -d ''; while read -r -d ''; do
+
+                title=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/TextView/SetFontStyle/b/text()' 2>/dev/null)
+                stars=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/HBoxView/HBoxView/PictureView/@url' 2>&1 >/dev/null)
+                stars=${stars//[^D]/}; stars=${stars//D/'*'}
+                author=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/TextView/SetFontStyle/GotoURL/b/text()' 2>/dev/null | perl -pe 's/\n//g; s/^ *| *$//')
+                review=$(xpath <(echo "$REPLY") '/VBoxView/TextView/SetFontStyle/text()' 2>/dev/null | fmt -w 70 | sed $'s/^/\t/g')
+
+                fmt=$(printf '[%-5s] - %s (by %s)\n%s' "$stars" "$title" "$author" "$review")
+                emit -n "$fmt"$'\n\n'
+
+            done
+        } < <(xpath <(echo "$appInfo") '/Document/View/ScrollView/VBoxView/View/MatrixView/VBoxView/VBoxView/VBoxView' 2>&1 \
+                | perl -pe 's/-- NODE --/\0/g'; printf '\0')
+
+        return
+    done
+
+    emit -r "Country ID '$countryId' is not known."
+    return 1
+}
+
+appId=$1
+countryId=$2
+
+# Show reviews for the given App ID or each known App ID.
+if [[ $appId ]]; then
+    reviewsForAppId
+else
+    for appId in "${appIds[@]}"
+    do reviewsForAppId; done
+fi
+
+
+#   my @rizray = split('\n', $riz);
+#   my @rizray = grep(/normalStyle/, @rizray);
+#   my @rizray = grep(!/GotoURL/, @rizray);
+#   my @rizray = grep(!/Sort by:/, @rizray);
+#   my @rizray = grep(!/by.*<b>/, @rizray);
+#   my @rizray = grep(!/">$/, @rizray);
+#   my @rizray = grep(!/Copyright/, @rizray);
+#   my @rizray = grep(!/> \/</, @rizray);
+#   my @rizray = grep(!/>..</, @rizray);
+#
+#   foreach my $item (@rizray) {
+#      # print $item, ": ";
+#      $item =~ s/.*">//;
+#      $item =~ s/<.*//;
+#      print "* ", $item, "\n";
+#   }
+#}
