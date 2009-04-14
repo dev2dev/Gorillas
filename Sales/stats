@@ -13,7 +13,7 @@ royalties=
 upgrades=
 sales=
 
-emit "Reading reports" --
+emit "Reading sales reports" --
     data=$(grep -hv '^Provider' */*.txt)
     while IFS=$'\t' read _ _ appId _; do
         for appIdExist in "${appIds[@]}"; do
@@ -36,12 +36,16 @@ emit "Found App IDs:"
 for i in ${!appIds[@]}; do
     emit "$i."$'\t'"${appIds[i]}"
 done
-until i=$(ask +0 "Which application would you like to generate a report for?") && [[ $i && $i != *[^0-9]* && ${appIds[i]} ]]; do
-    emit -y "Please enter a valid number."
-done
-appIdFilter=${appIds[i]}
+if (( ${#appIds[@]} > 1 )); then
+    until i=$(ask +0 "Which application would you like to generate a report for?") && [[ $i && $i != *[^0-9]* && ${appIds[i]} ]]; do
+        emit -y "Please enter a valid number."
+    done
+    appIdFilter=${appIds[i]}
+else
+    appIdFilter=$appIds
+fi
 
-emit "Reading currencies" --
+emit "Reading currency conversions" --
     while IFS=, read currencyName currencyCode toEur fromEur; do
         currencyNames+=("$currencyName")
         currencyCodes+=("$currencyCode")
@@ -115,3 +119,7 @@ for i in ${!currencyCodes[@]}; do
 
     emit -n "$(printf "%s:      %6d ~ %5.2f: %6.2f\t(EUR, from %s)" "${currencyCodes[i]}" "${currencyUnits[i]}" "$(bc <<< "${currencyRoyalties[i]} * ${toEurs[i]}")" "$(bc <<< "${currencyRoyalties[i]} * ${currencyUnits[i]} * ${toEurs[i]}")" "${currencyNames[i]}")"$'\n'
 done
+
+echo
+emit "U.S. Reviews:"
+    ./ratings "$appId" "143441"
