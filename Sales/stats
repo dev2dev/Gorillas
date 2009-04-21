@@ -1,6 +1,33 @@
 #! /usr/bin/env bash
-source bashlib
+# ___________________________________________________________________________ #
+#                                                                             #
+#       Stats -- Visualize iTunes sales data.                                 #
+#                                                                             #
+#                                                                             #
+#    Licensed under the Apache License, Version 2.0 (the "License");          #
+#    you may not use this file except in compliance with the License.         #
+#    You may obtain a copy of the License at                                  #
+#                                                                             #
+#        http://www.apache.org/licenses/LICENSE-2.0                           #
+#                                                                             #
+#    Unless required by applicable law or agreed to in writing, software      #
+#    distributed under the License is distributed on an "AS IS" BASIS,        #
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+#    See the License for the specific language governing permissions and      #
+#    limitations under the License.                                           #
+# ___________________________________________________________________________ #
+#                                                                             #
+#                                                                             #
+# Copyright 2007, lhunath                                                     #
+#   * http://lhunath.lyndir.com                                               #
+#   * Maarten Billemont.                                                      #
+#                                                                             #
+source bashlib                                                                #
 
+countryCodes=()
+countryUnits=()
+countryRoyalties=()
+countryCurrencies=()
 currencyNames=()
 currencyCodes=()
 currencyUnits=()
@@ -14,7 +41,7 @@ upgrades=
 sales=
 
 emit "Reading sales reports" --
-    data=$(grep -hv '^Provider' */*.txt)
+    data=$(grep -hv '^Provider' "${0%/*}"/*/*.txt)
     while IFS=$'\t' read _ _ appId _; do
         for appIdExist in "${appIds[@]}"; do
             [[ $appId = $appIdExist ]] && {
@@ -57,12 +84,37 @@ emit -$? || exit
 read entries _ < <(wc -l <<< "$data")
 entry=
 
-emit "Parsing reports"
+emit "Parsing reports"; printf "$save"
     while IFS=$'\t' read provider providerCountry appId upc isrc author title label type units royalty begin end currency country royaltyCurrency preorder seasonpass isan appleid price cma asset; do
 
         # Progress indicator.
         (( ++entry ))
-        printf "\r\t- %d / %d (%d%%)" "$entry" "$entries" "$((entry * 100 / entries))"
+        printf "$load\r\t- %d / %d (%d%%)" "$entry" "$entries" "$((entry * 100 / entries))"
+        data=(  provider        "$provider"
+                providerCountry "$providerCountry"
+                appId           "$appId"
+                upc             "$upc"
+                isrc            "$isrc"
+                author          "$author"
+                title           "$title"
+                label           "$label"
+                type            "$type"
+                units           "$units"
+                royalty         "$royalty"
+                begin           "$begin"
+                end             "$end"
+                currency        "$currency"
+                country         "$country"
+                royaltyCurrency "$royaltyCurrency"
+                preorder        "$preorder"
+                seasonpass      "$seasonpass"
+                isan            "$isan"
+                appleid         "$appleid"
+                price           "$price"
+                cma             "$cma"
+                asset           "$asset"            )
+        # Uncomment for some data debugging.
+        # printf "\n\t%20s: %-20s" "${data[@]}"
 
         # Reset last* counters each day.
         if [[ $lastdate != $end ]]; then
@@ -104,8 +156,25 @@ emit "Parsing reports"
         [[ $toEur = 0 ]] && emit -y "Couldn't find EUR conversion for: $royaltyCurrency"
 
         # Record received royalties.
-        lastroyalties=$(bc <<< "${lastroyalties:-0} + ($royalty * $units * $toEur)")
-        royalties=$(bc <<< "${royalties:-0} + ($royalty * $units * $toEur)")
+        eurRoyalty=$(bc <<< "$royalty * $units * $toEur")
+        lastroyalties=$(bc <<< "${lastroyalties:-0} + $eurRoyalty")
+        royalties=$(bc <<< "${royalties:-0} + $eurRoyalty")
+
+        # Record royalties per country.
+        for i in ${!countryCodes[@]}; do
+            [[ ${countryCodes[i]} = $country ]] && {
+                countryRoyalties[i]=$(bc <<< "${countryRoyalties[i]:-0} + $eurRoyalty")
+                (( ++countryUnits[i] ))
+                i=-1
+                break
+            }
+        done
+        (( i != -1 || ! ${#countryCodes[@]} )) && {
+            countryCodes+=("$country")
+            countryRoyalties+=("$eurRoyalty")
+            countryCurrencies+=("$royaltyCurrency")
+            countryUnits+=(1)
+        }
 
     done <<< "$data"
 
@@ -113,7 +182,9 @@ echo; echo
 emit -n "$(printf "Upgrades: %6d | Delta: %6d${lastfreeupgrades:+\t(Free: %d, Payed: %d)}" "$upgrades" "$lastupgrades" ${lastfreeupgrades:+"$lastfreeupgrades" "$((lastupgrades - lastfreeupgrades))"})"$'\n'
 emit -n "$(printf "Sales:    %6d | Delta: %6d${lastfreesales:+\t(Free: %d, Payed: %d)}" "$sales" "$lastsales" ${lastfreesales:+"$lastfreesales" "$((lastsales - lastfreesales))"})"$'\n'
 emit -n "$(printf "Profit:   %6.2f | Delta: %6.2f\t(EUR)" "$royalties" "$lastroyalties")"$'\n'
+
 echo
+emit "Currency breakdown:"
 for i in ${!currencyCodes[@]}; do
     (( ${currencyUnits[i]} )) || continue
 
@@ -121,5 +192,11 @@ for i in ${!currencyCodes[@]}; do
 done
 
 echo
+emit "Country breakdown:"
+for i in ${!countryCodes[@]}; do
+    emit -n "$(printf "%s:      %6d: %6.2f\t(EUR, from %s)" "${countryCodes[i]}" "${countryUnits[i]}" "${countryRoyalties[i]}" "${countryCurrencies[i]}")"$'\n'
+done
+
+echo
 emit "U.S. Reviews:"
-    ./ratings "$appId" "143441"
+    "${0%/*}/reviews" "$appId" "143441"
