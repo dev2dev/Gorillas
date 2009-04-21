@@ -1,122 +1,489 @@
-#!/usr/bin/env bash
-source bashlib
+#!/usr/bin/ruby
+# TODO: Found this somewhere; need to convert it to bash and integrate it into stats.
+# Haven't actually ever used this yet, so it's just here for you to play with.
 
-appIds=(        "com.lyndir.lhunath.Gorillas"                           )
-appStoreIds=(   302275459                                               )
-(( ${#appIds[@]} == ${#appStoreIds[@]} )) || {
-    emit -r "App ID and App Store ID count don't match"
-    exit 1
+MAX_THREADS = 16
+
+@knownRegionsToTopHundreds = 
+{
+    'United States'             => 25204,
+    # doesn't work right, not sure why 'Argentina'                 => 25129,
+    'Australia'                 => 25211,
+    'Belgium'                   => 25207,
+    'Brazil'                    => 25448,
+    'Canada'                    => 25208,
+    'Chile'                     => 25129,
+    'China'                     => 25448,
+    'Colombia'                  => 25129,
+    'Costa Rica'                => 25448,
+    'Croatia'                   => 25129,
+    'Czech Republic'            => 25129,
+    'Denmark'                   => 25207,
+    'Deutschland'               => 25210,
+    'El Salvador'               => 25129,
+    'Espana'                    => 25207,
+    'Finland'                   => 25207,
+    'France'                    => 25205,
+    'Greece'                    => 25207,
+    'Guatemala'                 => 25129,
+    'Hong Kong'                 => 25129,
+    'Hungary'                   => 25129,
+    'India'                     => 25129,
+    'Indonesia'                 => 25129,
+    'Ireland'                   => 25207,
+    'Israel'                    => 25129,
+    'Italia'                    => 25207,
+    'Korea'                     => 25448,
+    'Kuwait'                    => 25129,
+    'Lebanon'                   => 25129,
+    'Luxembourg'                => 25207,
+    'Malaysia'                  => 25129,
+    'Mexico'                    => 25129,
+    'Nederland'                 => 25207,
+    'New Zealand'               => 25211,
+    'Norway'                    => 25207,
+    'Osterreich'                => 25210,
+    'Pakistan'                  => 25129,
+    'Panama'                    => 25129,
+    'Peru'                      => 25129,
+    'Phillipines'               => 25129,
+    'Poland'                    => 25129,
+    'Portugal'                  => 25207,
+    'Qatar'                     => 25448,
+    'Romania'                   => 25129,
+    'Russia'                    => 25129,
+    'Saudi Arabia'              => 25129,
+    'Schweitz/Suisse'           => 25207,
+    'Singapore'                 => 25129,
+    'Slovakia'                  => 25129,
+    'Slovenia'                  => 25129,
+    'South Africa'              => 25448,
+    'Sri Lanka'                 => 25129,
+    'Sweden'                    => 25207,
+    'Taiwan'                    => 25129,
+    'Thailand'                  => 25129,
+    'Turkey'                    => 25129,
+    'United Arab Emirates'      => 25129,
+    'United Kingdom'            => 25206,
+    'Venezuela'                 => 25129,
+    'Vietnam'                   => 25129,
+    'Japan'                     => 25209
 }
 
-countryNames=(  "United States" "Argentina" "Australia" "Belgium"
-                "Brazil" "Canada" "Chile" "China" "Colombia"
-                "Costa Rica" "Croatia" "Czech Republic" "Denmark"
-                "Deutschland" "El Salvador" "Espana" "Finland" "France"
-                "Greece" "Guatemala" "Hong Kong" "Hungary" "India"
-                "Indonesia" "Ireland" "Israel" "Italia" "Korea" "Kuwait"
-                "Lebanon" "Luxembourg" "Malaysia" "Mexico" "Nederland"
-                "New Zealand" "Norway" "Osterreich" "Pakistan" "Panama"
-                "Peru" "Phillipines" "Poland" "Portugal" "Qatar"
-                "Romania" "Russia" "Saudi Arabia" "Schweitz/Suisse"
-                "Singapore" "Slovakia" "Slovenia" "South Africa"
-                "Sri Lanka" "Sweden" "Taiwan" "Thailand" "Turkey"
-                "United Arab Emirates" "United Kingdom" "Venezuela"
-                "Vietnam" "Japan"                                       )
-countryIds=(    143441 143505 143460 143446 143503 143455 143483 143465
-                143501 143495 143494 143489 143458 143443 143506 143454
-                143447 143442 143448 143504 143463 143482 143467 143476
-                143449 143491 143450 143466 143493 143497 143451 143473
-                143468 143452 143461 143457 143445 143477 143485 143507
-                143474 143478 143453 143498 143487 143469 143479 143459
-                143464 143496 143499 143472 143486 143456 143470 143475
-                143480 143481 143444 143502 143471 143462 )
-(( ${#countryNames[@]} == ${#countryIds[@]} )) || {
-    emit -r "Country name and id count don't match"
-    exit 1
-}
+#no books?
 
-reviewsForAppId() {
-    for a in "${!appIds[@]}"; do
-        [[ ${appIds[a]} == $appId ]] || continue
-
-        appStoreId=${appStoreIds[a]}
-        reviewsForAppStoreId
-        return
-    done
-
-    emit -r "App ID '$appId' is not known."
-    return 1
-}
-
-reviewsForAppStoreId() {
-    if [[ $countryId ]]; then
-        reviewsForCountryId
-    else
-        for countryId in "${countryIds[@]}"
-        do reviewsForCountryId; done
-    fi
-}
-
-reviewsForCountryId() {
-    for c in "${!countryIds[@]}"; do
-        (( ${countryIds[c]} == $countryId )) || continue
-
-        countryName=${countryNames[c]}
-        emit "$countryName" --
-            appInfo=$(curl -s -A "iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2" -H "X-Apple-Store-Front: $countryId-1" \
-                        "http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=$appStoreId&pageNumber=0&sortOrdering=2&type=Purple+Software" \
-                        | xmllint --format -)
-        emit -$? || continue
-
-        {
-            read -d ''; while read -r -d ''; do
-
-                title=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/TextView/SetFontStyle/b/text()' 2>/dev/null)
-                stars=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/HBoxView/HBoxView/PictureView/@url' 2>&1 >/dev/null)
-                stars=${stars//[^D]/}; stars=${stars//D/'*'}
-                author=$(xpath <(echo "$REPLY") '/VBoxView/HBoxView/TextView/SetFontStyle/GotoURL/b/text()' 2>/dev/null | perl -pe 's/\n//g; s/^ *| *$//')
-                review=$(xpath <(echo "$REPLY") '/VBoxView/TextView/SetFontStyle/text()' 2>/dev/null | fmt -w 70 | sed $'s/^/\t/g')
-
-                fmt=$(printf '[%-5s] - %s (by %s)\n%s' "$stars" "$title" "$author" "$review")
-                emit -n "$fmt"$'\n\n'
-
-            done
-        } < <(xpath <(echo "$appInfo") '/Document/View/ScrollView/VBoxView/View/MatrixView/VBoxView/VBoxView/VBoxView' 2>&1 \
-                | perl -pe 's/-- NODE --/\0/g'; printf '\0')
-
-        return
-    done
-
-    emit -r "Country ID '$countryId' is not known."
-    return 1
-}
-
-appId=$1
-countryId=$2
-
-# Show reviews for the given App ID or each known App ID.
-if [[ $appId ]]; then
-    reviewsForAppId
-else
-    for appId in "${appIds[@]}"
-    do reviewsForAppId; done
-fi
-
-
-#   my @rizray = split('\n', $riz);
-#   my @rizray = grep(/normalStyle/, @rizray);
-#   my @rizray = grep(!/GotoURL/, @rizray);
-#   my @rizray = grep(!/Sort by:/, @rizray);
-#   my @rizray = grep(!/by.*<b>/, @rizray);
-#   my @rizray = grep(!/">$/, @rizray);
-#   my @rizray = grep(!/Copyright/, @rizray);
-#   my @rizray = grep(!/> \/</, @rizray);
-#   my @rizray = grep(!/>..</, @rizray);
+@categoryOffsets = 
+{
+    'Top Paid'              => 0,
+    'Business'              => -56,
+    'Education'             => -48,
+    'Entertainment'         => -40,
+    'Finance'               => -32,
+    'Games'                 => -24,
+    'Health & Fitness'      => -16,
+    'Lifestyle'             => -8,
+    'Music'                 => 8,
+    'Navigation'            => 16,
+    'News'                  => 24,
+    'Photography'           => 32,
+    'Productivity'          => 40,
+    'Reference'             => 48,
+    'Social Networking'     => 56,
+    'Sports'                => 64,
+    'Travel'                => 72,
+    'Utilities'             => 80,
+    'Weather'               => 88,
+   #game sub-catgories
+    'Action'                => 1137,
+    'Adventure'             => 1147,
+    'Arcade'                => 1157,
+ #   //i added these don't know if they work
+    'Board'                 => 1167,
+    'Casino'                => 1177,
+    'Dice'                  => 1187,
+    'Education'             => 1197,
+    'Family'                => 1217,
+    'Kids'                  => 1227,
+    'Music'                 => 1237,
+#   //end 
+    'Puzzle'                => 1247,
+    'Role Playing'          => 1267,
+    'Simulation'            => 1277,
 #
-#   foreach my $item (@rizray) {
-#      # print $item, ": ";
-#      $item =~ s/.*">//;
-#      $item =~ s/<.*//;
-#      print "* ", $item, "\n";
-#   }
-#}
+    'SSports'               => 1287,
+
+}
+    #'Word'                 => 981   nope  1005 is the genre offset from games, but doesn't work
+
+
+
+@region_codes = {
+'United States'           => 143441,
+'Argentina'               => 143505,
+'Australia'               => 143460,
+'Belgium'                 => 143446,
+'Brazil'                  => 143503,
+'Canada'                  => 143455,
+'Chile'                   => 143483,
+'China'                   => 143465,
+'Colombia'                => 143501,
+'Costa Rica'              => 143495,
+'Croatia'                 => 143494,
+'Czech Republic'          => 143489,
+'Denmark'                 => 143458,
+'Deutschland'             => 143443,
+'El Salvador'             => 143506,
+'Espana'                  => 143454,
+'Finland'                 => 143447,
+'France'                  => 143442,
+'Greece'                  => 143448,
+'Guatemala'               => 143504,
+'Hong Kong'               => 143463,
+'Hungary'                 => 143482,
+'India'                   => 143467,
+'Indonesia'               => 143476,
+'Ireland'                 => 143449,
+'Israel'                  => 143491,
+'Italia'                  => 143450,
+'Korea'                   => 143466,
+'Kuwait'                  => 143493,
+'Lebanon'                 => 143497,
+'Luxembourg'              => 143451,
+'Malaysia'                => 143473,
+'Mexico'                  => 143468,
+'Nederland'               => 143452,
+'New Zealand'             => 143461,
+'Norway'                  => 143457,
+'Osterreich'              => 143445,
+'Pakistan'                => 143477,
+'Panama'                  => 143485,
+'Peru'                    => 143507,
+'Phillipines'             => 143474,
+'Poland'                  => 143478,
+'Portugal'                => 143453,
+'Qatar'                   => 143498,
+'Romania'                 => 143487,
+'Russia'                  => 143469,
+'Saudi Arabia'            => 143479,
+'Schweitz/Suisse'         => 143459,
+'Singapore'               => 143464,
+'Slovakia'                => 143496,
+'Slovenia'                => 143499,
+'So143472,
+'Sri Lanka'               => 143486,
+'Sweden'               => 143470,
+'Thailand'                => 143475,
+'Turkey'        => 143502,
+'Vietnam'                 => 143471,
+'Japan'  i          then '"'
+    when /\Agt\z/ni            then '>'
+    when /\Alt\z/ni            then '<'
+    when /\A#(\d+)\z/n         then Integer($1).chr
+    when /\A#x([0-9a-f]+)\z/ni then $1.hex.chr
+    end
+  }
+  str
+end
+
+def printStatsForRegionAndID(regionName, categoryName, category)
+    result = nil
+    
+
+    datastring = String.new()
+#    IO.popen("curl -s -A \"iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2)\" -H \"X-Apple-Store-Front: #{regionName}-1\" 'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewTop?id=#{category}&popId=30' | gunzip") {|d| datastring += d.read}
+ 
+     IO.popen("curl -s -A \"iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2)\" -H \"X-Apple-Store-Front: #{regionName}-1\" 'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewTop?id=#{category}&popId=30'") {|d| datastring += d.read}   
+    
+    returnedName = datastring.match(/pageName=(.*)&amp;pccr=/)
+    
+    if returnedName and returnedName[1]
+        return "#{regionName} - #{category} - #{categoryName} - #{unescapeHTML(returnedName[1])}"
+    else
+        return "#{regionName} - #{category} - #{categoryName} - No Match"
+    end
+end
+
+def scanCategories
+    @knownRegionsToTopHundreds.each do |regionName, topHundredCategory|
+        @categoryOffsets.each do |categoryName, categoryID|
+            puts printStatsForRegionAndID(regionName, categoryName, topHundredCategory + categoryID)
+        end
+    end
+end
+
+def printStatsForRegion(regionName, categoryName, topPaid, specificCategory)
+    result = {}
+    
+
+    regionID = @region_codes[regionName]
+    datastring = String.new()
+    
+    categoriesToFetch = [topPaid]
+    categoriesToFetch << specificCategory if specificCategory != topPaid
+    
+    categoriesToFetch.each do |category|
+      datastring = String.new()
+#      IO.popen("curl -s -A \"iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2)\" -H \"X-Apple-Store-Front: #{regionID}-1\" 'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewTop?id=#{category}&popId=30' | gunzip") {|d| datastring += d.read}
+
+      IO.popen("curl -s -A \"iTunes/4.2 (Macintosh; U; PPC Mac OS X 10.2)\" -H \"X-Apple-Store-Front: #{regionID}-1\" 'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewTop?id=#{category}&popId=30'") {|d| datastring += d.read}
+    
+    
+      #categoryNameFound = datastring.match(/pageName=(.*)&amp;pccr=/)[1]
+    
+      buys = datastring.scan(/\<Buy.*\>/)
+    
+      found = false
+      buys.each_with_index do |value, index|
+          #puts "index #{index} is value is #{value} " 
+          title = value.match(/itemName="(.*)"/)
+          if title then
+              match = nil
+              if @appID then 
+                  itemID = value.match(/salableAdamId=(\d+)&amp/)[1].to_i
+                  match = @appID == itemID
+              elsif @appName then
+                  match = title[1].match(/#{@appName}/)
+              end
+            
+              if match then
+                  result['regionName'] = regionName
+                  result['appName'] = unescapeHTML(title[1])
+                  if(category == topPaid) 
+                    result['topPaid'] = (index + 1).to_s
+                  else
+                    result['rank'] = (index + 1).to_s
+                  end  
+                  found = true
+                  break
+              end
+          end
+      end
+    
+      if !found then
+          result['regionName'] = regionName
+          if(category == topPaid) 
+            result['topPaid'] = "NR"
+          else
+            result['rank'] = "NR"
+          end  
+      end
+    end
+    
+    result
+end
+
+def saveStuff(array_or_hash)
+    
+end
+
+def main
+    
+    categoryName = "Top Paid"
+    categoryOffset = 0
+    
+    if @categoryName != nil then
+        if @categoryOffsets[@categoryName] then
+            categoryName = @categoryName
+            categoryOffset = @categoryOffsets[@categoryName]
+        else
+            puts "unknown category: #{@categoryName}"
+            exit(0)
+        end
+    end
+    
+   threads = []
+   results = []
+   
+   thread_count = 0
+    @knownRegionsToTopHundreds.each do |regionName, topPaidCategoryID|
+        #this hackyOffset thing is because the category offset is incorrect in the 25129 offset. Works for games, untested otherwise
+        hackyOffset = 0
+        if categoryOffset != 0 and topPaidCategoryID == 25129 then
+            hackyOffset = 29
+        end
+        specificCategoryID = topPaidCategoryID + categoryOffset + hackyOffset
+        
+        #too many threads = barf. clear em every n threads
+        if thread_count > MAX_THREADS then
+            remove_threads = []
+            while remove_threads.size == 0 do
+                threads.each do |thread|
+                    if not thread.alive? then
+                        remove_threads << thread
+                    end
+                end
+            end
+            
+            remove_threads.each do |remove_thread|
+                results << remove_thread.value
+                threads.delete(remove_thread)
+                thread_count -= 1
+            end
+        end
+        
+        threads << Thread.new {printStatsForRegion(regionName, categoryName, topPaidCategoryID, specificCategoryID)}
+        thread_count += 1
+    end
+    
+    while thread_count > 0 do
+        results << threads[0].value
+        thread_count -= 1
+        threads.delete_at(0)
+    end
+    #results = []
+
+    #threads.each do |thread|
+    #    results << thread.value
+    #end
+    
+    appName = @appName
+    
+    if appName == nil then
+        results.each do |result|
+            if result['appName'] then
+                appName = result['appName']
+                break
+            end
+        end
+    end
+    
+    title = ""
+    
+    if appName then
+        title = appName
+    else
+        title = "App: #{@appID}"
+        appName = @appID.to_s
+    end
+    
+    puts "\n\e[35m****** #{title} - #{categoryName} - #{Time.now.to_s} ******\e[0m\n\n"
+    puts "\e[1mRegion\e[0m               \e[1mRank\e[0m  \e[1mChange\e[0m"
+    
+    orderedRegions = @region_codes.keys.sort do |a, b|
+        a.casecmp(b)
+    end
+    
+    orderedResults = []
+    orderedRegions.each do |rc_key|
+        results.each do |result|
+            if result['regionName'] == rc_key then
+                orderedResults << result
+            end
+        end
+    end
+    
+    oldStats = nil
+    
+    begin
+        inputFile = File.new("top100LatestStats_#{categoryName}_#{appName}.txt", 'r')
+        oldStats = Marshal.load(inputFile.read)
+    rescue
+    end
+    
+    outputFile = File.new("top100LatestStats_#{categoryName}_#{appName}.txt", File::CREAT|File::TRUNC|File::RDWR)
+    outputFile << Marshal.dump({'results' => orderedResults, 'time' => Time.now})
+    outputFile.close
+    
+    prettyResults = []
+    orderedResults.each_with_index do |result, index|
+        regionTitle = "#{result['regionName']} "
+        while regionTitle.length < 20 do
+            regionTitle = regionTitle + "_"
+        end
+        
+        
+        topPaidRank = result['topPaid']
+        noTopPaidRank = topPaidRank == "NR"
+        topPaidRank = topPaidRank + " "
+        while topPaidRank.length < 5 do
+            topPaidRank = topPaidRank + "_"
+        end
+        
+        if @categoryName != nil
+          rank = result['rank']
+          noRank = rank == "NR"
+          rank = rank + " "
+          while rank.length < 5 do
+              rank = rank + "_"
+          end
+        end  
+        
+        oldStatsValue = "\e[33m+0\e[0m"
+        if oldStats then
+            oldStatsArray = oldStats
+            if oldStats.kind_of?(Hash) then
+                oldStatsArray = oldStats['results']
+            end
+            
+            if oldStatsArray[index] and oldStatsArray[index]['regionName'] and oldStatsArray[index]['regionName'] == result['rdStatsArray[index]['rank']
+
+                if oldRank then
+   hen
+                        if result['rank'] == "NR" then
+    atsValue = "\e[32m+#{100 - result['rank'].to_i} +\e[0m"
+                        end
+                    elsif result['rank'] == "NR" then
+                        noRank = false
+                        oldStatsValue = "\e[31m#{oldRank.to_i - 100} -\e[0m"
+                    elsif oldRank.to_i < result['rank'].to_i then
+                        oldStatsValue = "\e[31m#{oldRank.to_i - result['rank'].to_i}\e[0m"
+                    elsif oldRank.to_i > result['rank'].to_i then
+                        oldStatsValue = "\e[32m+#{oldRank.to_i - result['rank'].to_i}\e[0m"
+                    else
+                        oldStatsValue = "\e[33m+0\e[0m"
+                    end
+                end
+              end
+                
+                
+                oldTopPaid = oldStatsArray[index]['topPaid']
+                 if oldTopPaid then
+                      if oldTopPaid == "NR" then
+                          if result['topPaid'] == "NR" then
+                              oldTPStatsValue = "\e[33m+0\e[0m"
+                          else
+                              oldTPStatsValue = "\e[32m+#{100 - result['topPaid'].to_i}\e[0m"
+                          end
+                      elsif result['topPaid'] == "NR" then
+                          oldTPStatsValue = "\e[31m#{100 - oldTopPaid.to_i}\e[0m"
+                      elsif oldTopPaid.to_i < result['topPaid'].to_i then
+                          oldTPStatsValue = "\e[31m#{oldTopPaid.to_i - result['topPaid'].to_i}\e[0m"
+                      elsif oldTopPaid.to_i > result['topPaid'].to_i then
+                          oldTPStatsValue = "\e[32m+#{oldTopPaid.to_i - result['topPaid'].to_i}\e[0m"
+                      else
+                          oldTPStatsValue = "\e[33m+0\e[0m"
+                      end
+                  end
+                
+            end
+        end
+        
+        if (@categoryName != nil && !noRank) || !noTopPaidRank then
+          resultToPrint = "#{regionTitle}"
+          if rank == "NR" then
+            resultToPrint += " \e[33m#{rank}\e[0m #{oldStatsValue} " unless @categoryName == nil
+          else
+            resultToPrint += " \e[32m#{rank}\e[0m #{oldStatsValue} " unless @categoryName == nil
+          end
+          resultToPrint += "      Top Paid:" unless @categoryName == nil or noTopPaidRank 
+          resultToPrint += " \e[32m#{topPaidRank}\e[0m #{oldTPStatsValue}" unless noTopPaidRank
+          prettyResults << resultToPrint
+        end
+    end
+    
+    prettyResults.each do |printResult|
+        puts printResult
+    end
+    
+    
+    puts ""
+    
+    if oldStats != nil and oldStats.kind_of?(Hash) then
+        puts "\e[35m***** Last Run: #{oldStats['time'].to_s} *****\e[0m "
+        puts ""
+    end
+    
+end
+
+main
+#scanCategories
