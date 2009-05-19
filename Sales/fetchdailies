@@ -1,0 +1,71 @@
+#! /usr/bin/env bash
+# ___________________________________________________________________________ #
+#                                                                             #
+#       FetchDailies -- Download new daily sales reports from iTunes Connect. #
+#                                                                             #
+#                                                                             #
+#    Licensed under the Apache License, Version 2.0 (the "License");          #
+#    you may not use this file except in compliance with the License.         #
+#    You may obtain a copy of the License at                                  #
+#                                                                             #
+#        http://www.apache.org/licenses/LICENSE-2.0                           #
+#                                                                             #
+#    Unless required by applicable law or agreed to in writing, software      #
+#    distributed under the License is distributed on an "AS IS" BASIS,        #
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+#    See the License for the specific language governing permissions and      #
+#    limitations under the License.                                           #
+# ___________________________________________________________________________ #
+#                                                                             #
+#                                                                             #
+# Copyright 2009, lhunath                                                     #
+#   * http://lhunath.lyndir.com                                               #
+#   * Maarten Billemont.                                                      #
+#                                                                             #
+source bashlib                                                                #
+
+
+# Configuration
+{ IFS= read -r appleId; IFS= read -r password; } < ~/.appleid
+[[ -t 1 ]] || quiet=1
+
+
+# Utilities
+nextday() {
+    # Output the day after the one determined by the input arguments (year($1), month($2), day($3))
+    # Output nothing if the day that would be returned is today.
+    local year=$1 month=$2 day=$3
+
+    IFS=- read year month day < <(python -c "
+from datetime import date, timedelta
+print (date(${year#0},${month#0},${day#0}) + timedelta(1)).strftime('%Y-%m-%d')")
+
+    [[ $year-$month-$day = $today ]] && return
+    echo "$year-$month-$day"
+}
+
+# Figure out which dailies are missing.
+cd "${0%/*}"
+dailies=(*/*.txt)
+lastdaily=${dailies[@]:-1}
+IFS=_ read _ _ _ _ lastdailydate _ <<< "${lastdaily##*/}"
+{ read -n 4 dyear; read -n 2 dmonth; read -n 2 dday; } <<< "$lastdailydate"
+today=$(date +%Y-%m-%d)
+
+# Fetch the missing dailies.
+while IFS=- read dyear dmonth dday <<< "$(nextday "$dyear" "$dmonth" "$dday")" && [[ $dyear ]]; do
+
+    mkdir -p "$dyear-$dmonth" || continue
+
+    (( quiet )) || emit "Fetching dailies for '$dyear-$dmonth-$dday'" --
+
+        # Looks like the appdailysales script chokes when HTTPS_PROXY is set.
+        err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/appdailysales" \
+                --appleId "$appleId" --passwordStdin --unzip \
+                --outputDirectory "${0%/*}/$dyear-$dmonth/" --date "$dmonth/$dday/$dyear" 2>&1)
+        r=$?
+
+    (( quiet )) || emit -$r
+    [[ $err ]] && echo "$err"
+
+done

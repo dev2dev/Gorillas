@@ -24,8 +24,11 @@
 #                                                                             #
 source bashlib                                                                #
 
+### MODIFY TO ADD SUPPORT FOR MORE APPLICATIONS
 appIds=(        "com.lyndir.lhunath.Gorillas"                           )
 appStoreIds=(   302275459                                               )
+### END MODIFY
+
 (( ${#appIds[@]} == ${#appStoreIds[@]} )) || {
     emit -r "App ID and App Store ID count don't match"
     exit 1

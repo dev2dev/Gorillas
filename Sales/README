@@ -1,0 +1,192 @@
+
+
+    -- iPhone Application Sales Statistics in Bash --
+    http://www.lhunath.com/iphone-stats
+        by lhunath
+
+
+CONTENTS
+
+    stats           --  Bash script which parses your application sales
+                        reports and compiles some sale statistics from them.
+
+    reviews         --  Script which downloads iTunes App Store reviews for
+                        given applications.
+
+    fetchdailies    --  Bash script which checks which dailies you're missing
+                        and uses appdailysales to fetch them.
+
+    appdailysales   --  Python script which downloads your application sales
+                        reports from iTunes Connect.
+
+    bashlib         --  General purpose Bash scripting library.
+
+    currencies      --  Data file that contains currency conversion data.
+                        Last updated: April 15th, 2009.
+
+    ratings         --  Ruby script (unsupported; looks broken) that retrieves
+                        the spot of given applications in the iTunes listings.
+
+
+USAGE
+
+    1. stats
+
+    The script expects to find your sales data from iTunes Connect in
+    subdirectories of where you're running `stats` from.
+
+    NOTE:   `stats` expects to find uncompressed `.txt` files in these
+            subdirectories.
+
+    I recommend the format YYYY-MM for your subdirectory names.  This
+    is also the format used by the `fetchdailies` script.
+
+    As a guide, here's the layout of my sales data:
+
+        2009-01
+        2009-01/S_D_80071677_999998_20090117_20090118204458087.txt
+        2009-01/S_D_80071677_999998_20090118_20090120081227529.txt
+        ...
+        2009-02
+        2009-02/S_D_80071677_999998_20090201_20090205183120903.txt
+        2009-02/S_D_80071677_999998_20090202_20090205183130102.txt
+        ...
+
+    Running `stats` will cause it to read in all your `.txt` files
+    and compile some statistics on your sales history.
+
+    `stats` can cope with multiple applications in your sales data, it will
+    just ask you which application you'd like to compile a report for by
+    presenting you with a menu of available application AppIDs.
+
+
+    2. reviews
+
+    The script contains an array of known AppIDs and AppStoreIDs.  Initially,
+    this list will just contain my own application(s)' AppIDs and AppStoreIDs.
+    You'll have to modify these arrays to add support or your own applications.
+
+    Find the part (at the top) that says:
+
+        ### MODIFY TO ADD SUPPORT FOR MORE APPLICATIONS
+        appIds=(        "com.lyndir.lhunath.Gorillas"                           )
+        appStoreIds=(   302275459                                               )
+        ### END MODIFY
+
+    Replace it by something like this:
+
+        ### MODIFY TO ADD SUPPORT FOR MORE APPLICATIONS
+        appIds=(        "com.mycompany.MyApplication"
+                        "com.mycompany.MyOtherApplication"                      )
+        appStoreIds=(   999999999
+                        888888888                                               )
+        ### END MODIFY
+
+    Where `com.mycompany.MyApplication` is the AppID of your application as
+    specified in the application's `Info.plist`, and `999999999` is the
+    iTunes App Store ID of your application.  You can find this ID by looking
+    at the iTunes App Store link for your application.  For instance, the
+    iTunes App Store link for Gorillas is:
+    
+        http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=302275459&mt=8
+
+    The App Store ID is the number after the `id=` part in this URL.
+
+    After modifying the `reviews` script, you can run it to retrieve reviews
+    for all known applications (all applications in the appIds array) from
+    all countries with an iTunes App Store, or you can run it with the AppID
+    of the application whose reviews you're interested in and it will only
+    fetch the reviews for that application from all countries.  You can also
+    specify a countryId as the second argument to only fetch reviews for that
+    specific country.
+
+    The latter is exactly what `stats` does at the end of its operation.  It
+    runs the `reviews` script with the AppID you selected in its menu (or the
+    only AppID available in your reports if there is only one) and retrieves
+    all iTunes App Store reviews for the US iTunes App Store only.
+
+    
+    3. fetchdailies
+
+    The script checks what the latest daily sales report is you have (again,
+    relying on the fact that you've put them as uncompressed `.txt` files
+    in subdirectories of where you're running `fetchdailies` from) and queries
+    iTunes Connect to try and download all dailies since then.
+
+    To configure it for use, you need to create a file in your home directory
+    called `.appleid`.  This file should contain your AppleID and password.
+
+    NOTE:   Make sure that the file is properly secured with permissions!
+
+    The following code creates this file in a safe way, making sure only
+    you can access the password within it:
+
+        ( umask 177; vim ~/.appleid )
+
+    That's assuming your editor is `vim`.  If you'd rather use `emacs`,
+    `pico` or `nano`, replace `vim` in that command by your editor of choice.
+    
+    The file's contents should look like this (without the leading whitespace):
+
+        lhunath
+        mypassword
+
+    The `fetchdailies` script will read your AppleID and password from this
+    file when it's ran and pass it to the `appdailysales` script in a
+    secure manner.
+
+    The script is perfect for use in `crontab`.  Just add an entry that
+    references the `fetchdailies` script, set to run every day at a certain
+    hour.  For instance, I use the following crontab line to fetch my dailies
+    every day at midnight:
+
+        0 0 * * * ~/Documents/workspace/lyndir/Gorillas/Sales/fetchdailies
+
+    NOTE:   You need to reference the script with its pathname.  Putting
+            the directory that contains it in PATH is no good, because
+            then the script won't be able to figure out where you keep
+            it and your sales data.
+
+    Of course, you can also run it manually (`./fetchdailies`) to quickly
+    check iTunes Connect for any new reports.
+
+
+SEE ALSO
+
+    crontab(1), crontab(5):
+        For information on how to set up a crontab entry.
+
+    http://www.lhunath.com/iphone-stats:
+        The homepage of this bundle.
+
+    http://www.lhunath.com:
+        The homepage of the bundle author (lhunath).
+    
+
+HASHES
+
+    These are the MD5 hashes of the scripts (as of 2009-05-02):
+    MD5(stats.png)      = 3d036b67402102346909768b26256ec6
+    MD5(stats)          = d8300d90cd6394ee0409eda4b17b2b19
+    MD5(currencies)     = 3e45470593fa03198a837ebf2e2a4fd3
+    MD5(ratings)        = 43a56aafd1fdb802dff40fb540b03f66
+    MD5(reviews)        = a0bd932538e4899affb52300a518f16a
+    MD5(bashlib)        = 54a83fc4bfa45f1599e65f2f0ea5c258
+    MD5(appdailysales)  = b8afb0a94928f81c25edeaa17f6eb50d
+    MD5(fetchdailies)   = 83c56f544ca7d86ed9424e06483bb911
+
+
+AUTHORS
+
+    All bash scripts were created by lhunath (Maarten Billemont).
+
+    The `appdailysales` python script was modified by lhunath for integration
+    and security purposes.  See the script for information on the original
+    authors.
+
+
+BUG REPORTS
+
+    Should you find bugs or have issues while using these scripts, drop me a
+    line at lhunath@gmail.com.
+
