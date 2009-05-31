@@ -35,8 +35,9 @@ currencyRoyalties=()
 fromEurs=()
 toEurs=()
 appIds=()
+days=()
+royalties=()
 
-royalties=
 upgrades=
 sales=
 
@@ -82,7 +83,8 @@ emit "Reading currency conversions" --
 emit -$? || exit
 
 read entries _ < <(wc -l <<< "$data")
-entry=
+entry=0
+day=-1
 
 emit "Parsing reports"; printf "$save"
     while IFS=$'\t' read provider providerCountry appId upc isrc author title label type units royalty begin end currency country royaltyCurrency preorder seasonpass isan appleid price cma asset; do
@@ -122,7 +124,7 @@ emit "Parsing reports"; printf "$save"
             lastfreesales=
             lastupgrades=
             lastfreeupgrades=
-            lastroyalties=
+            (( ++day ))
             lastdate=$end
         fi
 
@@ -157,8 +159,8 @@ emit "Parsing reports"; printf "$save"
 
         # Record received royalties.
         eurRoyalty=$(bc <<< "$royalty * $units * $toEur")
-        lastroyalties=$(bc <<< "${lastroyalties:-0} + $eurRoyalty")
-        royalties=$(bc <<< "${royalties:-0} + $eurRoyalty")
+        days[day]=$end
+        royalties[day]=$(bc <<< "${royalties[day]:-0} + $eurRoyalty")
 
         # Record royalties per country.
         for i in ${!countryCodes[@]}; do
@@ -181,7 +183,20 @@ emit "Parsing reports"; printf "$save"
 echo; echo
 emit -n "$(printf "Upgrades: %6d | Delta: %6d${lastfreeupgrades:+\t(Free: %d, Payed: %d)}" "$upgrades" "$lastupgrades" ${lastfreeupgrades:+"$lastfreeupgrades" "$((lastupgrades - lastfreeupgrades))"})"$'\n'
 emit -n "$(printf "Sales:    %6d | Delta: %6d${lastfreesales:+\t(Free: %d, Payed: %d)}" "$sales" "$lastsales" ${lastfreesales:+"$lastfreesales" "$((lastsales - lastfreesales))"})"$'\n'
-emit -n "$(printf "Profit:   %6.2f | Delta: %6.2f\t(EUR)" "$royalties" "$lastroyalties")"$'\n'
+emit -n "$(printf "Profit:   %6.2f | Delta: %6.2f\t(EUR)" "$(IFS=+; bc <<< "${royalties[*]}")" "${royalties[@]: -1}")"$'\n'
+
+echo
+emit "Profit History:"
+sortedRoyalties=( $(printf '%s\n' "${royalties[@]}" | sort -n) )
+royaltyM=${sortedRoyalties[${#sortedRoyalties[@]} / 2]}
+royaltyQ3=${sortedRoyalties[${#sortedRoyalties[@]} * 3 / 4]}
+royaltyMax=${sortedRoyalties[${#sortedRoyalties[@]} - 1]}
+for day in "${!royalties[@]}"; do
+    royalty=${royalties[day]%%.*}
+    bar=$(printf '%*s' "$(bc <<< "${royalties[day]:-0} * ($(tput cols) - 30) / $royaltyMax")"); bar=${bar// /=}
+    emit -n "$(printf "%10s:      %6.2f | %s" "${days[day]}" "${royalties[day]:-0}" "$bar")"$'\n'
+done
+emit "$(printf 'Average Profit: %6.2f - Median Profit: %6.2f - Q3 Profit: %6.2f - Max Profit: %6.2f' "$(bc <<< "scale=2; ($(IFS=+; echo "${royalties[*]}")) / ${#royalties[@]}.0")" "$royaltyM" "$royaltyQ3" "$royaltyMax")"
 
 echo
 emit "Currency breakdown:"
@@ -196,7 +211,3 @@ emit "Country breakdown:"
 for i in ${!countryCodes[@]}; do
     emit -n "$(printf "%s:      %6d: %6.2f\t(EUR, from %s)" "${countryCodes[i]}" "${countryUnits[i]}" "${countryRoyalties[i]}" "${countryCurrencies[i]}")"$'\n'
 done
-
-echo
-emit "U.S. Reviews:"
-    "${0%/*}/reviews" "$appId" "143441"

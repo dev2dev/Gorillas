@@ -252,7 +252,10 @@ emit() {
         local font=$reset$textstyle$textcolor
         text=$font${text//$reset/$font}
         
-        printf "\r$reset $style$color* %s$reset" "$text"            >&$fd
+        if [[ -t $fd ]]
+        then printf "\r$reset $style$color* %s$reset" "$text"       >&$fd
+        else printf "$reset $style$color* %s$reset" "$text"         >&$fd
+        fi
     fi
 } # _____________________________________________________________________
 
@@ -361,7 +364,10 @@ spinner() {
     (( noeol )) && text=$origtext || text=$(eol "$origtext")
 
     # Spinner initial status.
-    printf "\r$save$eel$reset $style$color* %s$reset" "$text"       >&$fd
+    if [[ -t $fd ]]
+    then printf "\r$save$eel$reset $style$color* %s$reset" "$text"  >&$fd
+    else printf "$save$eel$reset $style$color* %s$reset" "$text"    >&$fd
+    fi
     (( output )) && printf "\n"                                     >&$fd
 
     # Render the spinner.
@@ -379,7 +385,7 @@ spinner() {
         fi
 
         if (( output ))
-        then printf "\r"                                            >&$fd
+        then [[ -t $fd ]] && printf "\r"                            >&$fd
         else printf "$load$eel"                                     >&$fd
         fi
 
@@ -401,7 +407,7 @@ spinner() {
 
     # Spinner final status.
     if (( output ))
-    then text=; printf "\r"                                         >&$fd
+    then text=; [[ -t $fd ]] && printf "\r"                         >&$fd
     else printf "$load"                                             >&$fd
     fi
 
