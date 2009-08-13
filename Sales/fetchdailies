@@ -46,7 +46,7 @@ print (date(${year#0},${month#0},${day#0}) + timedelta(1)).strftime('%Y-%m-%d')"
 
 # Figure out which dailies are missing.
 cd "${0%/*}"
-dailies=(*/*.txt)
+dailies=(Reports/*/*.txt)
 lastdaily=${dailies[@]:-1}
 IFS=_ read _ _ _ _ lastdailydate _ <<< "${lastdaily##*/}"
 { read -n 4 dyear; read -n 2 dmonth; read -n 2 dday; } <<< "$lastdailydate"
@@ -55,14 +55,16 @@ today=$(date +%Y-%m-%d)
 # Fetch the missing dailies.
 while IFS=- read dyear dmonth dday <<< "$(nextday "$dyear" "$dmonth" "$dday")" && [[ $dyear ]]; do
 
-    mkdir -p "$dyear-$dmonth" || continue
+    mkdir -p "Reports/$dyear-$dmonth" || continue
 
     (( quiet )) || emit "Fetching dailies for '$dyear-$dmonth-$dday'" --
 
         # Looks like the appdailysales script chokes when HTTPS_PROXY is set.
         err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/appdailysales" \
                 --appleId "$appleId" --passwordStdin --unzip \
-                --outputDirectory "${0%/*}/$dyear-$dmonth/" --date "$dmonth/$dday/$dyear" 2>&1)
+                --outputDirectory "${0%/*}/Reports/$dyear-$dmonth/" --date "$dmonth/$dday/$dyear" 2>&1)
+        #err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/itc-scrape" \
+        #        -u "$appleId" -P -d "$dmonth/$dday/$dyear" 2>&1)
         r=$?
 
     (( quiet )) || emit -$r

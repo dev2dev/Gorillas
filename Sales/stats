@@ -42,7 +42,7 @@ upgrades=
 sales=
 
 emit "Reading sales reports" --
-    data=$(grep -hv '^Provider' "${0%/*}"/*/*.txt)
+    data=$(grep -hv '^Provider' "${0%/*}"/Reports/*/*.txt)
     while IFS=$'\t' read _ _ appId _; do
         for appIdExist in "${appIds[@]}"; do
             [[ $appId = $appIdExist ]] && {
@@ -87,7 +87,7 @@ entry=0
 day=-1
 
 emit "Parsing reports"; printf "$save"
-    while IFS=$'\t' read provider providerCountry appId upc isrc author title label type units royalty begin end currency country royaltyCurrency preorder seasonpass isan appleid price cma asset; do
+    while IFS=$'\t' read provider providerCountry appId upc isrc author title label type _units _royalty begin end currency country royaltyCurrency preorder seasonpass isan appleid _price cma asset venderCode grid promoCode parentId; do
 
         # Progress indicator.
         (( ++entry ))
@@ -101,8 +101,8 @@ emit "Parsing reports"; printf "$save"
                 title           "$title"
                 label           "$label"
                 type            "$type"
-                units           "$units"
-                royalty         "$royalty"
+                units           "$_units"
+                royalty         "$_royalty"
                 begin           "$begin"
                 end             "$end"
                 currency        "$currency"
@@ -112,11 +112,15 @@ emit "Parsing reports"; printf "$save"
                 seasonpass      "$seasonpass"
                 isan            "$isan"
                 appleid         "$appleid"
-                price           "$price"
+                price           "$_price"
                 cma             "$cma"
-                asset           "$asset"            )
+                asset           "$asset"
+                vendorCode      "$vendorCode"
+                grid            "$grid"
+                promoCode       "$promoCode"
+                parentId        "$parentId"         )
         # Uncomment for some data debugging.
-        # printf "\n\t%20s: %-20s" "${data[@]}"
+        #printf "\n\t%20s: %-20s" "${data[@]}"
 
         # Reset last* counters each day.
         if [[ $lastdate != $end ]]; then
@@ -125,8 +129,13 @@ emit "Parsing reports"; printf "$save"
             lastupgrades=
             lastfreeupgrades=
             (( ++day ))
-            lastdate=$end
+            lastdate=$begin
         fi
+
+        # TODO: Average these in an iteration from begin to end.
+        units=$_units
+        royalty=$_royalty
+        price=$_price
 
         # Ignore non-Gorillas sales.
         [[ $appId = $appIdFilter ]] || continue
@@ -185,26 +194,28 @@ emit -n "$(printf "Upgrades: %6d | Delta: %6d${lastfreeupgrades:+\t(Free: %d, Pa
 emit -n "$(printf "Sales:    %6d | Delta: %6d${lastfreesales:+\t(Free: %d, Payed: %d)}" "$sales" "$lastsales" ${lastfreesales:+"$lastfreesales" "$((lastsales - lastfreesales))"})"$'\n'
 emit -n "$(printf "Profit:   %6.2f | Delta: %6.2f\t(EUR)" "$(IFS=+; bc <<< "${royalties[*]}")" "${royalties[@]: -1}")"$'\n'
 
-echo
-emit "Profit History:"
-sortedRoyalties=( $(printf '%s\n' "${royalties[@]}" | sort -n) )
-royaltyM=${sortedRoyalties[${#sortedRoyalties[@]} / 2]}
-royaltyQ3=${sortedRoyalties[${#sortedRoyalties[@]} * 3 / 4]}
-royaltyMax=${sortedRoyalties[${#sortedRoyalties[@]} - 1]}
-for day in "${!royalties[@]}"; do
-    royalty=${royalties[day]%%.*}
-    bar=$(printf '%*s' "$(bc <<< "${royalties[day]:-0} * ($(tput cols) - 30) / $royaltyMax")"); bar=${bar// /=}
-    emit -n "$(printf "%10s:      %6.2f | %s" "${days[day]}" "${royalties[day]:-0}" "$bar")"$'\n'
-done
-emit "$(printf 'Average Profit: %6.2f - Median Profit: %6.2f - Q3 Profit: %6.2f - Max Profit: %6.2f' "$(bc <<< "scale=2; ($(IFS=+; echo "${royalties[*]}")) / ${#royalties[@]}.0")" "$royaltyM" "$royaltyQ3" "$royaltyMax")"
+if (( ${#royalties[@]} )); then
+    echo
+    emit "Profit History:"
+    sortedRoyalties=( $(printf '%s\n' "${royalties[@]}" | sort -n) )
+    royaltyM=${sortedRoyalties[${#sortedRoyalties[@]} / 2]}
+    royaltyQ3=${sortedRoyalties[${#sortedRoyalties[@]} * 3 / 4]}
+    royaltyMax=${sortedRoyalties[${#sortedRoyalties[@]} - 1]}
+    for day in "${!royalties[@]}"; do
+        royalty=${royalties[day]%%.*}
+        bar=$(printf '%*s' "$(bc <<< "${royalties[day]:-0} * ($(tput cols) - 30) / $royaltyMax")"); bar=${bar// /=}
+        emit -n "$(printf "%10s:      %6.2f | %s" "${days[day]}" "${royalties[day]:-0}" "$bar")"$'\n'
+    done
+    emit "$(printf 'Average Profit: %6.2f - Median Profit: %6.2f - Q3 Profit: %6.2f - Max Profit: %6.2f' "$(bc <<< "scale=2; ($(IFS=+; echo "${royalties[*]}")) / ${#royalties[@]}.0")" "$royaltyM" "$royaltyQ3" "$royaltyMax")"
 
-echo
-emit "Currency breakdown:"
-for i in ${!currencyCodes[@]}; do
-    (( ${currencyUnits[i]} )) || continue
+    echo
+    emit "Currency breakdown:"
+    for i in ${!currencyCodes[@]}; do
+        (( ${currencyUnits[i]} )) || continue
 
-    emit -n "$(printf "%s:      %6d ~ %5.2f: %6.2f\t(EUR, from %s)" "${currencyCodes[i]}" "${currencyUnits[i]}" "$(bc <<< "${currencyRoyalties[i]} * ${toEurs[i]}")" "$(bc <<< "${currencyRoyalties[i]} * ${currencyUnits[i]} * ${toEurs[i]}")" "${currencyNames[i]}")"$'\n'
-done
+        emit -n "$(printf "%s:      %6d ~ %5.2f: %6.2f\t(EUR, from %s)" "${currencyCodes[i]}" "${currencyUnits[i]}" "$(bc <<< "${currencyRoyalties[i]} * ${toEurs[i]}")" "$(bc <<< "${currencyRoyalties[i]} * ${currencyUnits[i]} * ${toEurs[i]}")" "${currencyNames[i]}")"$'\n'
+    done
+fi
 
 echo
 emit "Country breakdown:"

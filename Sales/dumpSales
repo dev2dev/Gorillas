@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+appIds=(com.lyndir.lhunath.Gorillas
+        com.lyndir.lhunath.Gorillas.lite    )
+isFree=(0
+        1                                   )
+
+for a in "${!appIds[@]}"; do
+    echo "${appIds[a]}:"
+    
+    cat "${0%/*}/Reports"/*/*.txt |
+
+    {
+        units=0
+        while IFS=$'\t' read provider providerCountry appId upc isrc author title label type _units _royalty begin end currency country _royaltyCurrency preorder seasonpass isan appleid price cma asset venderCode grid promoCode parentId; do
+            [[ $appId == ${appIds[a]} ]] || continue
+            [[ $type == 1 ]] || continue
+            (( ! ${isFree[a]} )) && [[ $price == 0 ]] && continue
+
+            echo "$begin $_units"
+            let units+=_units
+        done
+    } |
+
+    awk '
+        { foo[$1]+=$2 }
+        END { for (f in foo) print "    " f " " foo[f]; }' |
+
+    sort -n
+
+done

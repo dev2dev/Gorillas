@@ -1,0 +1,7 @@
+Start Date	End Date	UPC	ISRC	Vendor Identifier	Quantity	Partner Share	Extended Partner Share	Partner Share Currency	Sales or Return	Apple Identifier	Artist/Show/Developer	Title	Label/Studio/Network/Developer	Grid	Product Type Identifier	ISAN/Other Identifier	Country Of Sale	Pre-order Flag	Promo Code	Customer Price	Customer Currency
+02/01/2009	02/28/2009			com.lyndir.lhunath.Gorillas	1	0.97	0.97	EUR	S	302275459	Lhunath	Gorillas			1		SE			15.00	SEK
+02/01/2009	02/28/2009			com.lyndir.lhunath.Gorillas	1	0.48	0.48	EUR	S	302275459	Lhunath	Gorillas			1		DE			0.79	EUR
+02/01/2009	02/28/2009			com.lyndir.lhunath.Gorillas	1	0.48	0.48	EUR	S	302275459	Lhunath	Gorillas			1		IT			0.79	EUR
+02/01/2009	02/28/2009			com.lyndir.lhunath.Gorillas	2	0.97	1.94	EUR	S	302275459	Lhunath	Gorillas			1		DE			1.59	EUR
+02/01/2009	02/28/2009			com.lyndir.lhunath.Gorillas	1	0.97	0.97	EUR	S	302275459	Lhunath	Gorillas			1		FR			1.59	EUR
+Total_Amount:4.84

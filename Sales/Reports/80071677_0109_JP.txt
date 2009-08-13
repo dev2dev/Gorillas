@@ -1,0 +1,4 @@
+Start Date	End Date	UPC	ISRC	Vendor Identifier	Quantity	Partner Share	Extended Partner Share	Partner Share Currency	Sale Or Return	Apple Identifier	Artist/Show/Developer	Title	Label/Studio/Network	Side	Product Type Identifier	Account Identifier	Country Of Sale	Pre-order Flag	Prepaid	Prepaid Type	ISAN/Other Identifier	CMA Flag	Customer Price	Customer Currency
+12/28/2008	01/31/2009			com.lyndir.lhunath.Gorillas	      1	       161	                  161	JPY	S	302275459	Lhunath	Gorillas			1	80071677	Japan						            230	JPY
+																								
+						Total	                  161	JPY																

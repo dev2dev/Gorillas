@@ -1,0 +1,5 @@
+Start Date	End Date	UPC	ISRC	Vendor Identifier	Quantity	Partner Share	Extended Partner Share	Partner Share Currency	Sale Or Return	Apple Identifier	Artist/Show/Developer	Title	Label/Studio/Network	Side	Product Type Identifier	Account Identifier	Country Of Sale	Pre-order Flag	Prepaid	Prepaid Type	ISAN/Other Identifier	CMA Flag	Customer Price	Customer Currency
+28.12.2008	31.01.2009			com.lyndir.lhunath.Gorillas	      2	      0.72	                 1.44	GBP	S	302275459	Lhunath	Gorillas			1	80071677	Great Britain						           1.04	GBP
+28.12.2008	31.01.2009			com.lyndir.lhunath.Gorillas	      2	      0.72	                 1.44	GBP	S	302275459	Lhunath	Gorillas			1	80071677	Great Britain						           1.03	GBP
+																								
+						Total	                 2.88	GBP																
