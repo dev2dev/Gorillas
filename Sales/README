@@ -165,15 +165,15 @@ SEE ALSO
 
 HASHES
 
-    These are the MD5 hashes of the scripts (as of 2009-05-02):
-    MD5(stats.png)      = 3d036b67402102346909768b26256ec6
-    MD5(stats)          = d8300d90cd6394ee0409eda4b17b2b19
-    MD5(currencies)     = 3e45470593fa03198a837ebf2e2a4fd3
-    MD5(ratings)        = 43a56aafd1fdb802dff40fb540b03f66
-    MD5(reviews)        = a0bd932538e4899affb52300a518f16a
-    MD5(bashlib)        = 54a83fc4bfa45f1599e65f2f0ea5c258
-    MD5(appdailysales)  = b8afb0a94928f81c25edeaa17f6eb50d
-    MD5(fetchdailies)   = 83c56f544ca7d86ed9424e06483bb911
+    These are the MD5 hashes of the scripts (as of 2009-08-27):
+    MD5 (stats.png)     = 3d036b67402102346909768b26256ec6
+    MD5 (stats)         = 28fbfb6156db5b80d50e42fadc61c612
+    MD5 (currencies)    = 3e45470593fa03198a837ebf2e2a4fd3
+    MD5 (ratings)       = 43a56aafd1fdb802dff40fb540b03f66
+    MD5 (reviews)       = a0bd932538e4899affb52300a518f16a
+    MD5 (bashlib)       = 06623588fcdd425392d6b0b2344a4812
+    MD5 (appdailysales) = 110d57926ee8e13b225d8a81a14fac60
+    MD5 (fetchdailies)  = 0f4c214d1910e01cb2c1fb4068675604
 
 
 AUTHORS
