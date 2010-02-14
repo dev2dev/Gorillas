@@ -1,0 +1,16 @@
+Provider	Provider Country	Vendor Identifier	UPC	ISRC	Artist / Show	Title / Episode / Season	Label/Studio/Network	Product Type Identifier	Units	Royalty Price	Begin Date	End Date	Customer Currency	Country Code	Royalty Currency	Preorder	Season Pass	ISAN	Apple Identifier	Customer Price	CMA	Asset/Content Flavor	Vendor Offer Code	Grid	Promo Code	Parent Identifier
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	19	0	12/26/2009	12/26/2009	USD	US	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/26/2009	12/26/2009	EUR	GR	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	2	0	12/26/2009	12/26/2009	EUR	ES	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	1	.7	12/26/2009	12/26/2009	CAD	CA	CAD	 	 	 	302275459	.99	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	2	0	12/26/2009	12/26/2009	AUD	AU	AUD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	7	1	0	12/26/2009	12/26/2009	GBP	GB	GBP	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	2	.48	12/26/2009	12/26/2009	EUR	IT	EUR	 	 	 	302275459	.79	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	6	.7	12/26/2009	12/26/2009	USD	US	USD	 	 	 	302275459	.99	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/26/2009	12/26/2009	EUR	BE	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/26/2009	12/26/2009	EUR	DE	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	2	0	12/26/2009	12/26/2009	MXN	MX	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	1	.36	12/26/2009	12/26/2009	GBP	GB	GBP	 	 	 	302275459	.59	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	9	0	12/26/2009	12/26/2009	GBP	GB	GBP	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/26/2009	12/26/2009	EUR	AT	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	2	0	12/26/2009	12/26/2009	CAD	CA	CAD	 	 	 	319351334	0	 	 	 	 	 	 

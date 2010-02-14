@@ -5,7 +5,7 @@
 # iTune Connect Daily Sales Reports Downloader
 # Copyright 2008-2009 Kirby Turner
 #
-# Version 1.8.1
+# Version 1.10
 #
 # Latest version and additional information available at:
 #   http://appdailysales.googlecode.com/
@@ -78,11 +78,13 @@ try:
 except ImportError:
     BeautifulSoup = None
 
+
 class ITCException(Exception):
-    def __init__(self, value):
+    def __init__(self,value):
         self.value = value
     def __str__(self):
-        return repr(self.value)
+        return repr(self.value);
+
 
 # The class ReportOptions defines a structure for passing
 # report options to the download routine. The expected
@@ -121,7 +123,7 @@ Options and arguments:
 -h     : print this help message and exit (also --help)
 -a uid : your apple id (also --appleId)
 -p pwd : your password (also --password)
--P     : read the password from stdin (also --password-stdin)
+-P     : read the password from stdin (also --passwordStdin)
 -o dir : directory where download file is stored, default is the current working directory (also --outputDirectory)
 -v     : verbose output, default is off (also --verbose)
 -u     : unzip download file, default is off (also --unzip)
@@ -244,10 +246,10 @@ def downloadFile(options):
         match = re.findall('name="frmVendorPage" action="(.*)"', html)
         urlDownload = urlBase % match[0]
         match = re.findall('name="(.*?)"', html)
-        fieldNameReportType = match[4] # selReportType
-        fieldNameReportPeriod = match[5] # selDateType
-        fieldNameDayOrWeekSelection = match[8] # hiddenDayOrWeekSelection
-        fieldNameSubmitTypeName = match[9] # hiddenSubmitTypeName
+        fieldNameReportType = match[6] # selReportType
+        fieldNameReportPeriod = match[7] # selDateType
+        fieldNameDayOrWeekSelection = match[10] # hiddenDayOrWeekSelection
+        fieldNameSubmitTypeName = match[11] # hiddenSubmitTypeName
 
 
     # Ah...more fun.  We need to post the page with the form
@@ -267,7 +269,7 @@ def downloadFile(options):
         match = re.findall('name="frmVendorPage" action="(.*)"', html)
         urlDownload = urlBase % match[0]
         match = re.findall('name="(.*?)"', html)
-        fieldNameDayOrWeekDropdown = match[6]
+        fieldNameDayOrWeekDropdown = match[8]
 
     # Set the list of report dates.
     reportDates = []
@@ -339,7 +341,6 @@ def main():
     options.verbose = verbose
     options.daysToDownload = daysToDownload
     options.dateToDownload = dateToDownload
-
     # Download the file.
     try:
         downloadFile(options)

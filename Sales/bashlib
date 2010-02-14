@@ -18,9 +18,9 @@
 # ___________________________________________________________________________ #
 #                                                                             #
 #                                                                             #
-# Copyright 2007, lhunath                                                     #
-#   * http://lhunath.lyndir.com                                               #
-#   * Maarten Billemont.                                                      #
+# Copyright 2007-2009, lhunath                                                #
+#   * http://www.lhunath.com                                                  #
+#   * Maarten Billemont                                                       #
 #                                                                             #
 
 
@@ -92,6 +92,58 @@ export back=$'\b'
 # |                                                                      |
 # |                                        .:: FUNCTION DECLARATIONS ::. |
 # |______________________________________________________________________|
+
+
+#  ______________________________________________________________________
+# |__ Chr _______________________________________________________________|
+#
+#       chr decimal
+#
+# Outputs the character that has the given decimal ASCII value.
+#
+chr() {
+    printf \\"$(printf '%03o' "$1")"
+} # _____________________________________________________________________
+
+
+
+#  ______________________________________________________________________
+# |__ Ord _______________________________________________________________|
+#
+#       ord character
+#
+# Outputs the decimal ASCII value of the given character.
+#
+ord() {
+    printf %d "'$1"
+} # _____________________________________________________________________
+
+
+
+#  ______________________________________________________________________
+# |__ Hex _______________________________________________________________|
+#
+#       hex character
+#
+# Outputs the hexadecimal ASCII value of the given character.
+#
+hex() { 
+  printf '%x' "'$1"
+} # _____________________________________________________________________
+
+
+
+#  ______________________________________________________________________
+# |__ Unhex _______________________________________________________________|
+#
+#       unhex character
+#
+# Outputs the character that has the given decimal ASCII value.
+#
+unhex() {
+  printf \\x"$1"
+} # _____________________________________________________________________
+
 
 
 #  ______________________________________________________________________
@@ -242,7 +294,7 @@ emit() {
         sleep .01 # Let the spinner initialize itself properly first.
         if   (( $# == 1 )); then command=$1
         elif (( $# >  1 )); then command=$(printf '%q ' "$@")
-        else return; fi
+        else return 0; fi
 
         eval "$command" >/dev/null \
             && spinner -0 \
@@ -252,10 +304,7 @@ emit() {
         local font=$reset$textstyle$textcolor
         text=$font${text//$reset/$font}
         
-        if [[ -t $fd ]]
-        then printf "\r$reset $style$color* %s$reset" "$text"       >&$fd
-        else printf "$reset $style$color* %s$reset" "$text"         >&$fd
-        fi
+        printf "\r$reset $style$color* %s$reset" "$text"            >&$fd
     fi
 } # _____________________________________________________________________
 
@@ -364,17 +413,14 @@ spinner() {
     (( noeol )) && text=$origtext || text=$(eol "$origtext")
 
     # Spinner initial status.
-    if [[ -t $fd ]]
-    then printf "\r$save$eel$reset $style$color* %s$reset" "$text"  >&$fd
-    else printf "$save$eel$reset $style$color* %s$reset" "$text"    >&$fd
-    fi
+    printf "\r$save$eel$reset $style$color* %s$reset" "$text"       >&$fd
     (( output )) && printf "\n"                                     >&$fd
 
     # Render the spinner.
     set +m
     local i=0
     while true; do
-        IFS= read -r -d '' newtext
+        IFS= read -r -d '' newtext || true
         newtext=${newtext%%$'\n'}; newtext=${newtext##*$'\n'}
         if [[ $newtext = +* ]]; then
             newtext="$origtext [${newtext#+}]"
@@ -385,7 +431,7 @@ spinner() {
         fi
 
         if (( output ))
-        then [[ -t $fd ]] && printf "\r"                            >&$fd
+        then printf "\r"                                            >&$fd
         else printf "$load$eel"                                     >&$fd
         fi
 
@@ -407,7 +453,7 @@ spinner() {
 
     # Spinner final status.
     if (( output ))
-    then text=; [[ -t $fd ]] && printf "\r"                         >&$fd
+    then text=; printf "\r"                                         >&$fd
     else printf "$load"                                             >&$fd
     fi
 
@@ -790,7 +836,7 @@ getArgs() {
 
     # Any arguments found?
     (( count )) && printf "%s" "$OPTARGS"
-    (( found ))
+    return $(( ! found ))
 } # _____________________________________________________________________
 
 
@@ -971,7 +1017,7 @@ shorten() {
 inArray() {
 
     # Check usage.
-    (( $# < 2 )) || getArgs -q :h "$@" && {
+    (( $# < 1 )) || getArgs -q :h "$@" && {
         emit -y 'Please provide the element to search for and the array' \
                 'to search through.'
         return 1

@@ -60,7 +60,7 @@ while IFS=- read dyear dmonth dday <<< "$(nextday "$dyear" "$dmonth" "$dday")" &
     (( quiet )) || emit "Fetching dailies for '$dyear-$dmonth-$dday'" --
 
         # Looks like the appdailysales script chokes when HTTPS_PROXY is set.
-        err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/appdailysales" \
+        err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/appdailysales.py" \
                 --appleId "$appleId" --passwordStdin --unzip \
                 --outputDirectory "${0%/*}/Reports/$dyear-$dmonth/" --date "$dmonth/$dday/$dyear" 2>&1)
         #err=$(printf %s "$password" | https_proxy= HTTPS_PROXY= "${0%/*}/itc-scrape" \

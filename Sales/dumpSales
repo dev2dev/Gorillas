@@ -17,6 +17,9 @@ for a in "${!appIds[@]}"; do
             [[ $type == 1 ]] || continue
             (( ! ${isFree[a]} )) && [[ $price == 0 ]] && continue
 
+            IFS=/ read m d y <<< "$begin"
+            begin="$y-$m-$d"
+
             echo "$begin $_units"
             let units+=_units
         done

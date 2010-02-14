@@ -7,25 +7,26 @@
 
 CONTENTS
 
-    stats           --  Bash script which parses your application sales
-                        reports and compiles some sale statistics from them.
+    stats               --  Bash script which parses your application sales
+                            reports and compiles some sale statistics from them.
 
-    reviews         --  Script which downloads iTunes App Store reviews for
-                        given applications.
+    reviews             --  Script which downloads iTunes App Store reviews for
+                            given applications.
 
-    fetchdailies    --  Bash script which checks which dailies you're missing
-                        and uses appdailysales to fetch them.
+    fetchdailies        --  Bash script which checks which dailies you're missing
+                            and uses appdailysales to fetch them.
 
-    appdailysales   --  Python script which downloads your application sales
-                        reports from iTunes Connect.
+    appdailysales.py    --  Python script which downloads your application sales
+                            reports from iTunes Connect.
+                            (http://code.google.com/p/appdailysales/)
 
-    bashlib         --  General purpose Bash scripting library.
+    bashlib             --  General purpose Bash scripting library.
 
-    currencies      --  Data file that contains currency conversion data.
-                        Last updated: April 15th, 2009.
+    currencies          --  Data file that contains currency conversion data.
+                            Last updated: April 15th, 2009.
 
-    ratings         --  Ruby script (unsupported; looks broken) that retrieves
-                        the spot of given applications in the iTunes listings.
+    ratings             --  Ruby script (unsupported; looks broken) that retrieves
+                            the spot of given applications in the iTunes listings.
 
 
 USAGE
@@ -172,7 +173,6 @@ HASHES
     MD5 (ratings)       = 43a56aafd1fdb802dff40fb540b03f66
     MD5 (reviews)       = a0bd932538e4899affb52300a518f16a
     MD5 (bashlib)       = 06623588fcdd425392d6b0b2344a4812
-    MD5 (appdailysales) = 110d57926ee8e13b225d8a81a14fac60
     MD5 (fetchdailies)  = 0f4c214d1910e01cb2c1fb4068675604
 
 
@@ -180,9 +180,7 @@ AUTHORS
 
     All bash scripts were created by lhunath (Maarten Billemont).
 
-    The `appdailysales` python script was modified by lhunath for integration
-    and security purposes.  See the script for information on the original
-    authors.
+    The `appdailysales.py` Python script is a Google Code project.
 
 
 BUG REPORTS

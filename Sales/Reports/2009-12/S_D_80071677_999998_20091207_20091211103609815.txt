@@ -1,0 +1,13 @@
+Provider	Provider Country	Vendor Identifier	UPC	ISRC	Artist / Show	Title / Episode / Season	Label/Studio/Network	Product Type Identifier	Units	Royalty Price	Begin Date	End Date	Customer Currency	Country Code	Royalty Currency	Preorder	Season Pass	ISAN	Apple Identifier	Customer Price	CMA	Asset/Content Flavor	Vendor Offer Code	Grid	Promo Code	Parent Identifier
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	1	.48	12/07/2009	12/07/2009	EUR	IT	EUR	 	 	 	302275459	.79	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	EUR	ES	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	7	0	12/07/2009	12/07/2009	USD	US	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	EUR	BE	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	USD	ID	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	1	1	.7	12/07/2009	12/07/2009	USD	US	USD	 	 	 	302275459	.99	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	GBP	GB	GBP	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	EUR	AT	EUR	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	7	1	0	12/07/2009	12/07/2009	USD	US	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	1	0	12/07/2009	12/07/2009	USD	TW	USD	 	 	 	319351334	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas	 	 	Lhunath	Gorillas	 	7	1	0	12/07/2009	12/07/2009	USD	US	USD	 	 	 	302275459	0	 	 	 	 	 	 
+APPLE	US	com.lyndir.lhunath.Gorillas.lite	 	 	Lhunath	Gorillas Lite	 	1	2	0	12/07/2009	12/07/2009	CAD	CA	CAD	 	 	 	319351334	0	 	 	 	 	 	 
